@@ -2,8 +2,11 @@ const express = require('express');
 const app = express();
 const axios = require('axios');
 const cors = require('cors');
+const path = require('path');
 
 app.use(cors());
+
+app.use(express.static(path.join(__dirname,'dist')));
 
 app.get('/status', (req, res) => {
     axios.get("https://oke5yaeave.execute-api.us-west-2.amazonaws.com/prod/status", {

@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "ui": "parcel index.html",
-    "start": "run-p server ui"
+    "start": "nodemon server.js",
+    "prestart": "parcel build frontEnd/index.html"
   },
   "author": "",
   "license": "ISC",
@@ -19,6 +19,7 @@
     "babel-preset-env": "^1.7.0",
     "babel-preset-react": "^6.24.1",
     "bulma": "^0.7.4",
+    "concurrently": "^4.1.0",
     "cors": "^2.8.5",
     "express": "^4.16.4",
     "mongoose": "^5.4.19",

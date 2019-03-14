@@ -18,7 +18,7 @@ class App extends Component {
     constructor(props) {
         super(props);
 
-        this.state = {"something": "result"}
+        this.state = {"something": "result", "hi": "done"}
 
         //TODO: Get this response
         axios.get("http://localhost:8080/status", {
