@@ -1,42 +1,57 @@
 import React, { Component } from 'react';
+import axios from 'axios';
 import ReactDOM from 'react-dom';
 import 'bulma/bulma'; //CSS framework 
+import ReduxPromise from 'redux-promise';
 
 var options = {
     host: "https://oke5yaeave.execute-api.us-west-2.amazonaws.com/prod",
     path: "/status",
     method: "GET",
     headers: {
-        "Content-Type": "application/json",
-        "x-api-key": "XKCySm9mvc9aHQI3limEu96L9xNFr8gPhjxqfNpe"
+        "x-api-key": "XKCySm9mvc9aHQI3limEu96L9xNFr8gPhjxqfNpe",
     }
 };
 
-var req = http.request(options, function (res) {
-    var responseString = "";
-
-    res.on("data", function (data) {
-        responseString += data;
-        // save all the data from response
-    });
-    
-    res.on("end", function () {
-        console.log(responseString); 
-        // print to console when response ends
-    });
-});
 
 class App extends Component {
     constructor(props) {
         super(props);
-        this.state = {
-          list: [
-            "Go to the store",
-            "Wash the dishes",
-            "Learn some code",
-            "Something"
-          ]
-        }
+
+        this.state = {"something": "result"}
+
+        //TODO: Get this response
+        axios.get("https://oke5yaeave.execute-api.us-west-2.amazonaws.com/prod/status", {
+            crossDomain: true,
+            headers: {
+                "x-api-key": "XKCySm9mvc9aHQI3limEu96L9xNFr8gPhjxqfNpe"
+            }
+        }).then(response => {
+            console.log(response)
+        });
+        
+        
+
+        /*
+        const https = require('https');
+
+        https.get('https://oke5yaeave.execute-api.us-west-2.amazonaws.com/prod/status',{headers: {"x-api-key": "XKCySm9mvc9aHQI3limEu96L9xNFr8gPhjxqfNpe"}} ,(resp) => {
+        let data = '';
+
+        // A chunk of data has been recieved.
+        resp.on('data', (chunk) => {
+            data += chunk;
+        });
+
+        // The whole response has been received. Print out the result.
+        resp.on('end', () => {
+            console.log(JSON.parse(data).explanation);
+        });
+
+        }).on("error", (err) => {
+        console.log("Error: " + err.message);
+        });
+        */
 
         this.addItem = this.addItem.bind(this);
     }
@@ -74,11 +89,7 @@ class App extends Component {
             <div className="content">
                 <div className="container">
                     <section className="section">
-                    <ul>
-                        {this.state.list.map(item => (
-                        <li key={item}>{item}</li>
-                        ))}
-                    </ul>
+                    <p>{JSON.stringify(this.state)}</p>
                     </section>
                     <hr />
                     <section className="section">
