@@ -4,14 +4,7 @@ import ReactDOM from 'react-dom';
 import 'bulma/bulma'; //CSS framework 
 import ReduxPromise from 'redux-promise';
 
-var options = {
-    host: "https://oke5yaeave.execute-api.us-west-2.amazonaws.com/prod",
-    path: "/status",
-    method: "GET",
-    headers: {
-        "x-api-key": "XKCySm9mvc9aHQI3limEu96L9xNFr8gPhjxqfNpe",
-    }
-};
+var apiURL = "http://localhost:8080/"
 
 
 class App extends Component {
@@ -21,10 +14,10 @@ class App extends Component {
         this.state = {"something": "result", "hi": "done"}
 
         //TODO: Get this response
-        axios.get("http://localhost:8080/status", {
+        axios.get(apiUrl+"status", {
 
         }).then(response => {
-            console.log(response)
+            console.log(response.data)
         });
         
         
