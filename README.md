@@ -1,4 +1,4 @@
-# Inmoment
+Start the server by running: npm start
 
 Trying to solve this problem:
 
