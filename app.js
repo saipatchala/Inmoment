@@ -21,11 +21,8 @@ class App extends Component {
         this.state = {"something": "result"}
 
         //TODO: Get this response
-        axios.get("https://oke5yaeave.execute-api.us-west-2.amazonaws.com/prod/status", {
-            crossDomain: true,
-            headers: {
-                "x-api-key": "XKCySm9mvc9aHQI3limEu96L9xNFr8gPhjxqfNpe"
-            }
+        axios.get("http://localhost:8080/status", {
+
         }).then(response => {
             console.log(response)
         });
