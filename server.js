@@ -3,6 +3,7 @@ const app = express();
 const axios = require('axios');
 const cors = require('cors');
 const path = require('path');
+const adapter = require('axios/lib/adapters/http');
 
 app.use(cors());
 
@@ -20,7 +21,7 @@ app.get('/status', (req, res) => {
 })
 
 //Taking care of calling the api and returning the data
-app.get('/*/', (req, res) => {
+app.get('/jump-to-first-term', (req, res) => {
     var acceptablePaths = [
         "/move-to-next-page",
         "/move-to-previous-page",
@@ -32,6 +33,7 @@ app.get('/*/', (req, res) => {
         "/jump-to-last-term"];
     
     if (acceptablePaths.includes(req.path)){
+        //TODO: returning forbidden error
         axios.post("https://oke5yaeave.execute-api.us-west-2.amazonaws.com/prod"+req.path, {
             crossDomain: true,
             headers: {
@@ -39,6 +41,8 @@ app.get('/*/', (req, res) => {
             }
         }).then(response => {
             return res.json(response.data);
+        }).catch(error => {
+            console.log(error.response);
         });
     } else {
         res.json("Path not accounted for");
