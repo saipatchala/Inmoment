@@ -3,7 +3,6 @@ const app = express();
 const axios = require('axios');
 const cors = require('cors');
 const path = require('path');
-const adapter = require('axios/lib/adapters/http');
 
 app.use(cors());
 
