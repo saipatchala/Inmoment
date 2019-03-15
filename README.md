@@ -1,6 +1,8 @@
 Start the server by running: npm start
 
-Trying to solve this problem:
+Problems to fix are in //TODO section of the code
+
+#Trying to solve this problem:
 
 Imagine that you work for Company X that has developed an amazing robot. This robot is equipped with a pair of mechanical arms and a camera. When a Websters Unabridged English Dictionary is placed in front of the robot, the robot is capable of turning the dictionary’s pages forward and backward, and moving its camera to view the terms and definitions on the current page of the dictionary. The robot is also capable of jumping directly to the first or last page of the dictionary, and it is capable of jumping directly to the first or last term on the current page of the dictionary.
 
