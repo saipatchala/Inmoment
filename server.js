@@ -34,7 +34,7 @@ app.get('/jump-to-first-term', (req, res) => {
     
     if (acceptablePaths.includes(req.path)){
         //TODO: returning forbidden error
-        axios.post("https://oke5yaeave.execute-api.us-west-2.amazonaws.com/prod"+req.path, {
+        axios.post("https://oke5yaeave.execute-api.us-west-2.amazonaws.com/prod"+req.path,{}, {
             crossDomain: true,
             headers: {
                 "x-api-key": "XKCySm9mvc9aHQI3limEu96L9xNFr8gPhjxqfNpe"
