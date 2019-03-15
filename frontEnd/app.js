@@ -31,6 +31,17 @@ class App extends Component {
                 throw Error("Failed API response");
             }  
         })
+        
+        axios.get(apiUrl+"jump-to-first-page", {}).then(response => {
+            if (response.status === 200){
+                this.setState({
+                    state: response.data
+                });
+            }else{
+                throw Error("Failed API response");
+            }  
+        })
+        
     }
 
     searchItem(e) {
@@ -63,17 +74,17 @@ class App extends Component {
         
         //Get to the right page
         if (result.minIndex == 0) {
-            axios.get(apiUrl+"jump-to-first-term", {}).then(response => {
-                if (response.status === 200){
+            axios.get(apiUrl+"jump-to-first-page", {}).then(response => {
+                axios.get(apiUrl+"jump-to-first-term", {}).then(response => {
                     this.setState({
                         state: response.data
                     });
                     console.log("Jumped to first term");
-                    //iterateTillCondition("move-to-next-page",searchTerm,"response.data.currentTerm.localeCompare(searchTerm) == -1",{},"currentPageIndex");
-                }else{
-                    throw Error("Failed API response");
-                }  
-            })
+                    //TODO: These need to happen in order:
+                    this.iterateTillCondition("move-to-next-page",searchTerm,"response.data.currentTerm.localeCompare(searchTerm) == -1",{},"currentPageIndex"); 
+                    axios.get(apiUrl+"move-to-last-page", {}).then(response => {
+                        this.iterateTillCondition("move-to-next-term",searchTerm,"response.data.currentTerm.localeCompare(searchTerm) == -1",{},"currentTermIndex"); 
+            })})})
         } else if (result.minIndex == 2) {
             axios.get(apiUrl+"jump-to-last-term", {}).then(response => {
                 if (response.status === 200){
@@ -91,7 +102,7 @@ class App extends Component {
     }
 
     /**
-     * Iterate till condition is met
+     * Recursively call api till evalPhrase is met.
      * @param {name of the api to be called} apiPhrase 
      * @param {the term we are looking for} searchTerm 
      * @param {the phrase till this loop iteration stops} evalPhrase 
@@ -114,7 +125,7 @@ class App extends Component {
             }
 
             if (eval(evalPhrase)){
-                iterateTillCondition(apiPhrase, searchTerm, evalPhrase);
+                this.iterateTillCondition(apiPhrase, searchTerm, evalPhrase);
             } else {
                 return;
             }

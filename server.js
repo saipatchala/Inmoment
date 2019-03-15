@@ -21,7 +21,7 @@ app.get('/status', (req, res) => {
 })
 
 //Taking care of calling the api and returning the data
-app.get('/jump-to-first-term', (req, res) => {
+app.get('/*/', (req, res) => {
     var acceptablePaths = [
         "/move-to-next-page",
         "/move-to-previous-page",
