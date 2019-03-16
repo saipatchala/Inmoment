@@ -135,20 +135,18 @@ class App extends Component {
 
     //Function for calling api once
     callApiOnce(apiPhrase){
-        return new Promise(function (resolve, reject) {
-            axios.get(apiUrl+"status", {
+        return axios.get(apiUrl+"status", {
 
             }).then(response => {
                 if (response.status === 200){
                     this.setState({
                         state: response.data
                     });
-                    resolve();
+                    return Promise.resolve(response.data);
                 }else{
-                    reject(response.status);
+                    return Promise.reject(response);
                 }  
             })
-        })
     }
 
     render() {
