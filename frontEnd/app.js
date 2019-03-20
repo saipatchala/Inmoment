@@ -27,7 +27,6 @@ class App extends Component {
         this.callApiOnce = this.callApiOnce.bind(this);
         this.findTermOnRightPage = this.findTermOnRightPage.bind(this);
         this.displayMessage = this.displayMessage.bind(this);
-        this.test = this.test.bind(this);
         
         //Get current robot location on page load
         this.callApiOnce("status").then(() =>{}) 
@@ -68,10 +67,8 @@ class App extends Component {
 
         //Edge conditions of items is before the dictionary and item is after dictionary
         if (result.minIndex === 0 && result.forward === -1){
-            searchItem.classList.add("is-danger");
             return;
         } else if (result.minIndex === 2 && result.forward === 1){
-            searchItem.classList.add("is-danger");
             return;
         }
         
@@ -96,7 +93,7 @@ class App extends Component {
                     if (this.state.state.currentTerm.toLowerCase().localeCompare(searchTerm) == 0){
                         this.displayMessage();
                     } else if (this.state.state.currentTerm.toLowerCase().localeCompare(searchTerm) === 1){ //inbetween current & last
-                        this.iterateTillCondition("move-to-previous-term",searchTerm,"response.data.currentTerm.localeCompare(searchTerm) == 1",{},"currentTermIndex"); 
+                        this.findTermOnRightPage();
                     } else { //repeat front logic
                         this.goForward();
                     }
@@ -106,7 +103,7 @@ class App extends Component {
                     if (this.state.state.currentTerm.toLowerCase().localeCompare(searchTerm) == 0){
                         this.displayMessage();
                     } else if (this.state.state.currentTerm.toLowerCase().localeCompare(searchTerm) === -1){ //inbetween current & first
-                        this.iterateTillCondition("move-to-next-term",searchTerm,"response.data.currentTerm.localeCompare(searchTerm) == -1",{},"currentTermIndex"); 
+                        this.findTermOnRightPage();
                     } else { //repeat back logic
                         this.goBackward();
                     }
@@ -227,16 +224,16 @@ class App extends Component {
             } else{
                 throw new Error("Reached a place in findTermRightPage that shouldn't exist");
             }
-        }).then(() => {
+        }).then(() => { //After firstTerm and lastTerm are known run this to find term
             var compare = findClosestMatch([firstTerm,lastTerm],this.state.searchTerm);
 
-        if (compare.minIndex === 0){
+        if (compare.minIndex === 0){ //Closer to first term so, search from first term
             new Promise((resolve,reject) => {if (this.state.state.hasNextTerm == false){
                 resolve(this.callApiOnce("jump-to-first-term"));
             }else{resolve()}}).then(() => {this.iterateTillCondition("move-to-next-term",this.state.searchTerm,"response.data.currentTerm.localeCompare(searchTerm) == -1",{},"currentTermIndex").then(()=>{
                 this.displayMessage();
             })}); 
-        } else if (compare.minIndex === 1) {
+        } else if (compare.minIndex === 1) { //Closer to the last term so, search from last term
             new Promise((resolve,reject) => {if (this.state.state.hasNextTerm == false){
                 resolve(this.callApiOnce("jump-to-first-term"));
             }else{resolve()}}).then(() => {this.iterateTillCondition("move-to-previous-term",this.state.searchTerm,"response.data.currentTerm.localeCompare(searchTerm) == 1",{},"currentTermIndex").then(()=>{
@@ -249,6 +246,9 @@ class App extends Component {
         }))
     }
 
+    /*
+     * Compare current term and display either message or error
+     */
     displayMessage(){
         if (this.state.state.currentTerm.localeCompare(this.state.searchTerm) == 0) {
             this.setState({
@@ -261,32 +261,6 @@ class App extends Component {
                 showDefinition: false
             });
         }
-    }
-
-    test(){
-        var compare = {"minIndex":0};
-        console.log(this.state.searchTerm);
-        return (new Promise((resolve,reject) => {
-            console.log(this.state.searchTerm);
-            if (compare.minIndex === 0){
-            resolve(this.iterateTillCondition("move-to-next-term",this.state.searchTerm,"response.data.currentTerm.localeCompare(searchTerm) == -1",{},"currentTermIndex")); 
-        } else if (compare.minIndex === 1) {
-            resolve(this.iterateTillCondition("move-to-previous-term",this.state.searchTerm,"response.data.currentTerm.localeCompare(searchTerm) == 1",{},"currentTermIndex"));
-        } else{
-            throw new Error("Reach a state that shouldn't exist");
-        }
-    }).then(() => {
-        console.log("After then");
-        if (this.state.state.currentTerm.localeCompare(this.state.searchTerm) == 0) {
-            this.setState({
-                showDefinition: true
-            })
-        } else {
-            this.setState({
-                showError: true
-            });
-        }
-    })); 
     }
 
     render() {
@@ -302,10 +276,10 @@ class App extends Component {
                     </form>
                     </section>
                     <section className = "CurrentRobot">
-                    <p> Robot is currently looking at: {this.state.state.currentTerm}</p>
+                    <p id="showGreen"> Robot is currently looking at: {this.state.state.currentTerm}</p>
                     <p> Robot is at the page number: {this.state.state.currentPageIndex}</p>
-                    { this.state.showDefinition ? <p>Definition: {this.state.state.currentTermDefinition}</p> : null }
-                    { this.state.showError ? <p>Error: couldn't find the term definition</p> : null }
+                    { this.state.showDefinition ? <p id="definition">Definition: {this.state.state.currentTermDefinition}</p> : null }
+                    { this.state.showError ? <p id= "error">Error: couldn't find the term definition</p> : null }
                     </section>
                 </div>
             </div>
@@ -358,42 +332,3 @@ function findClosestMatch(inputs, query){
 
 }
 
-/*
-var Q = require("q");
-
-// `condition` is a function that returns a boolean
-// `body` is a function that returns a promise
-// returns a promise for the completion of the loop
-function promiseWhile(condition, body) {
-    var done = Q.defer();
-
-    function loop() {
-        // When the result of calling `condition` is no longer true, we are
-        // done.
-        if (!condition()) return done.resolve();
-        // Use `when`, in case `body` does not return a promise.
-        // When it completes loop again otherwise, if it fails, reject the
-        // done promise
-        Q.when(body(), loop, done.reject);
-    }
-
-    // Start running the loop in the next tick so that this function is
-    // completely async. It would be unexpected if `body` was called
-    // synchronously the first time.
-    Q.nextTick(loop);
-
-    // The promise
-    return done.promise;
-}
-
-
-// Usage
-var index = 1;
-promiseWhile(function () { return index <= 11; }, function () {
-    console.log(index);
-    index++;
-    return Q.delay(500); // arbitrary async
-}).then(function () {
-    console.log("done");
-}).done();
-*/
