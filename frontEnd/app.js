@@ -15,8 +15,9 @@ class App extends Component {
 
         //Default state
         this.state = {"state": {"status": "READY","timeUsed": 90885, "timeRemaining": 513914, "currentPageIndex": 0, "currentTermIndex": 0, "currentTerm": "A", "currentTermDefinition": "The first letter of the English and of many other alphabets.The capital A of the alphabets of Middle and Western Europe, as alsothe small letter (a), besides the forms in Italic, black letter,etc., are all descended from the old Latin A, which was borrowed fromthe Greek Alpha, of the same form; and this was made from the firstletter (Aleph, and itself from the Egyptian origin. The Aleph was aconsonant letter, with a guttural breath sound that was not anelement of Greek articulation; and the Greeks took it to representtheir vowel Alpha with the ä sound, the Phoenician alphabet having novowel symbols. This letter, in English, is used for several differentvowel sounds. See Guide to pronunciation, §§ 43-74. The regular longa, as in fate, etc., is a comparatively modern sound, and has takenthe place of what, till about the early part of the 17th century, wasa sound of the quality of ä (as in far).", "hasNextPage": true, "hasNextTerm": true, "hasPreviousPage": false, "hasPreviousTerm": false},
-            "searchTerm": "Basic",
-            "showChildren": false
+            "searchTerm": "default",
+            "showDefinition": false,
+            "showError": false
         }
 
         this.searchItem = this.searchItem.bind(this);
@@ -25,6 +26,8 @@ class App extends Component {
         this.goBackward = this.goBackward.bind(this);
         this.callApiOnce = this.callApiOnce.bind(this);
         this.findTermOnRightPage = this.findTermOnRightPage.bind(this);
+        this.displayMessage = this.displayMessage.bind(this);
+        this.test = this.test.bind(this);
         
         //Get current robot location on page load
         this.callApiOnce("status").then(() =>{}) 
@@ -42,7 +45,7 @@ class App extends Component {
         });
 
         /*
-        this.findTermOnRightPage().then(() => {
+        this.test().then(() => {
             console.log("order6");
         });
         return;
@@ -54,11 +57,14 @@ class App extends Component {
 
         //If the current term is what we are looking for
         if (result.forward === 0){
-            this.setState({
-                showChildren: true
-            });
+            this.displayMessage();
             return;
-        } 
+        } else {
+            this.setState({
+                showDefinition: false,
+                showError: false
+            });
+        }
 
         //Edge conditions of items is before the dictionary and item is after dictionary
         if (result.minIndex === 0 && result.forward === -1){
@@ -87,9 +93,9 @@ class App extends Component {
 
             if (result.forward === 1){
                 this.callApiOnce("jump-to-last-term").then(() => {
-                    if (this.state.state.currentTerm.localeCompare(searchTerm) == 0){
-                        //TODO: Call function to set definition
-                    } else if (this.state.state.currentTerm.localeCompare(searchTerm) === -1){ //inbetween current & last
+                    if (this.state.state.currentTerm.toLowerCase().localeCompare(searchTerm) == 0){
+                        this.displayMessage();
+                    } else if (this.state.state.currentTerm.toLowerCase().localeCompare(searchTerm) === 1){ //inbetween current & last
                         this.iterateTillCondition("move-to-previous-term",searchTerm,"response.data.currentTerm.localeCompare(searchTerm) == 1",{},"currentTermIndex"); 
                     } else { //repeat front logic
                         this.goForward();
@@ -97,9 +103,9 @@ class App extends Component {
                 })
             } else if (result.forward === -1){
                 this.callApiOnce("jump-to-first-term").then(() => {
-                    if (this.state.state.currentTerm.localeCompare(searchTerm) == 0){
-                        //TODO: Call function to show definition
-                    } else if (this.state.state.currentTerm.localeCompare(searchTerm) === 1){ //inbetween current & first
+                    if (this.state.state.currentTerm.toLowerCase().localeCompare(searchTerm) == 0){
+                        this.displayMessage();
+                    } else if (this.state.state.currentTerm.toLowerCase().localeCompare(searchTerm) === -1){ //inbetween current & first
                         this.iterateTillCondition("move-to-next-term",searchTerm,"response.data.currentTerm.localeCompare(searchTerm) == -1",{},"currentTermIndex"); 
                     } else { //repeat back logic
                         this.goBackward();
@@ -107,9 +113,6 @@ class App extends Component {
                 })
             }
         }
-
-        console.log("Got to the End");
-        //form.reset();
     }
 
     /**
@@ -126,6 +129,11 @@ class App extends Component {
             this.setState({
                 state: response.data
             });
+
+            response.data.currentTerm = response.data.currentTerm.toLowerCase();
+            if (response.data.currentTerm.localeCompare(searchTerm) == 0){
+                this.displayMessage();
+            }
             
             //Check if we are in a loop
             if (alreadyVisited[response.data[loopVariable]] !== undefined){
@@ -134,8 +142,7 @@ class App extends Component {
                 alreadyVisited[response.data[loopVariable]] = true;
             }
 
-            response.data.currentTerm = response.data.currentTerm.toLowerCase();
-            //console.log("CurrentTerm: "+response.data.currentTerm+" SearchTerm: "+searchTerm+" eval(): "+eval(evalPhrase));
+            //console.log("CurrentTerm: "+response.data.currentTerm+" SearchTerm: "+searchTerm+" eval(): ");
             if (eval(evalPhrase)){
                 return this.iterateTillCondition(apiPhrase, searchTerm, evalPhrase, alreadyVisited, loopVariable)
             } else {
@@ -158,20 +165,42 @@ class App extends Component {
         }))
     }
 
+    /*
+     * goes forward to the right page and term
+     */
     goForward(){
-        this.iterateTillCondition("move-to-next-page",this.state.searchTerm,"response.data.currentTerm.localeCompare(searchTerm) == -1",{},"currentPageIndex").then(()=>{
-            this.callApiOnce("move-to-previous-page").then(() => {
-                return this.findTermOnRightPage(); 
+        return (new Promise((resolve,reject) => {
+            if (this.state.state.hasPreviousTerm == true){
+                resolve(this.callApiOnce("jump-to-first-term"))
+            }else {
+                resolve("Done");
+            }
+            }).then(()=> {
+                this.iterateTillCondition("move-to-next-page",this.state.searchTerm,"response.data.currentTerm.localeCompare(searchTerm) == -1",{},"currentPageIndex").then(()=>{
+                    this.callApiOnce("move-to-previous-page").then(() => {
+                        return this.findTermOnRightPage(); 
+                })
             })
-        })
+        }))
     }
 
+    /*
+     * goes backward to the right page and right term
+     */
     goBackward(){
-        this.iterateTillCondition("move-to-previous-page",this.state.searchTerm,"response.data.currentTerm.localeCompare(searchTerm) == 1",{},"currentPageIndex").then(()=>{
-            this.callApiOnce("move-to-next-page").then(() => {
-                return this.findTermOnRightPage(); 
+        return (new Promise((resolve,reject) => {
+            if (this.state.state.hasNextTerm == true){
+                resolve(this.callApiOnce("jump-to-last-term"))
+            }else {
+                resolve("Done");
+            }
+            }).then(()=> {
+                this.iterateTillCondition("move-to-previous-page",this.state.searchTerm,"response.data.currentTerm.localeCompare(searchTerm) == 1",{},"currentPageIndex").then(()=>{
+                    this.callApiOnce("move-to-next-page").then(() => {
+                        return this.findTermOnRightPage(); 
+                })
             })
-        })
+        }))
     }
 
     /*
@@ -201,14 +230,63 @@ class App extends Component {
         }).then(() => {
             var compare = findClosestMatch([firstTerm,lastTerm],this.state.searchTerm);
 
-            if (compare.minIndex === 0 && compare.forward === 1){
-                return this.iterateTillCondition("move-to-next-term",this.state.searchTerm,"response.data.currentTerm.toLo.localeCompare(searchTerm) == -1",{},"currentTermIndex"); 
-            } else if (compare.minIndex === 1 && compare.forward === -1) {
-                return this.iterateTillCondition("move-to-previous-term",this.state.searchTerm,"response.data.currentTerm.localeCompare(searchTerm) == 1",{},"currentTermIndex"); 
-            } else{
-                throw new Error("Reach a state that shouldn't exist");
-            }
+        if (compare.minIndex === 0){
+            new Promise((resolve,reject) => {if (this.state.state.hasNextTerm == false){
+                resolve(this.callApiOnce("jump-to-first-term"));
+            }else{resolve()}}).then(() => {this.iterateTillCondition("move-to-next-term",this.state.searchTerm,"response.data.currentTerm.localeCompare(searchTerm) == -1",{},"currentTermIndex").then(()=>{
+                this.displayMessage();
+            })}); 
+        } else if (compare.minIndex === 1) {
+            new Promise((resolve,reject) => {if (this.state.state.hasNextTerm == false){
+                resolve(this.callApiOnce("jump-to-first-term"));
+            }else{resolve()}}).then(() => {this.iterateTillCondition("move-to-previous-term",this.state.searchTerm,"response.data.currentTerm.localeCompare(searchTerm) == 1",{},"currentTermIndex").then(()=>{
+               this.displayMessage();
+            })});
+        } else{
+            throw new Error("Reach a state that shouldn't exist");
+        }
+        
         }))
+    }
+
+    displayMessage(){
+        if (this.state.state.currentTerm.localeCompare(this.state.searchTerm) == 0) {
+            this.setState({
+                showDefinition: true,
+                showError: false
+            })
+        } else {
+            this.setState({
+                showError: true,
+                showDefinition: false
+            });
+        }
+    }
+
+    test(){
+        var compare = {"minIndex":0};
+        console.log(this.state.searchTerm);
+        return (new Promise((resolve,reject) => {
+            console.log(this.state.searchTerm);
+            if (compare.minIndex === 0){
+            resolve(this.iterateTillCondition("move-to-next-term",this.state.searchTerm,"response.data.currentTerm.localeCompare(searchTerm) == -1",{},"currentTermIndex")); 
+        } else if (compare.minIndex === 1) {
+            resolve(this.iterateTillCondition("move-to-previous-term",this.state.searchTerm,"response.data.currentTerm.localeCompare(searchTerm) == 1",{},"currentTermIndex"));
+        } else{
+            throw new Error("Reach a state that shouldn't exist");
+        }
+    }).then(() => {
+        console.log("After then");
+        if (this.state.state.currentTerm.localeCompare(this.state.searchTerm) == 0) {
+            this.setState({
+                showDefinition: true
+            })
+        } else {
+            this.setState({
+                showError: true
+            });
+        }
+    })); 
     }
 
     render() {
@@ -226,7 +304,8 @@ class App extends Component {
                     <section className = "CurrentRobot">
                     <p> Robot is currently looking at: {this.state.state.currentTerm}</p>
                     <p> Robot is at the page number: {this.state.state.currentPageIndex}</p>
-                    { this.state.showChildren ? <p>Got Results</p> : null }
+                    { this.state.showDefinition ? <p>Definition: {this.state.state.currentTermDefinition}</p> : null }
+                    { this.state.showError ? <p>Error: couldn't find the term definition</p> : null }
                     </section>
                 </div>
             </div>
