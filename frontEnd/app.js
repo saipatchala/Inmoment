@@ -268,11 +268,8 @@ class App extends Component {
             <div className="content">
                 <div className="container">
                     <section className="section">
-                    <form className="form" id="searchItemForm" position="absolute" top="311px">
+                    <form className="form" id="searchItemForm" position="absolute" top="311px" onSubmit={this.searchItem}>
                         <input type="text" className="input" id="addInput" placeholder="Type your input here" />
-                        <button className="button is-info" onClick={this.searchItem}>
-                        Search
-                        </button>
                     </form>
                     </section>
                     <section className = "CurrentRobot">
